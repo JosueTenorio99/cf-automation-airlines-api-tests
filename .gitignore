@@ -1,0 +1,25 @@
+# Archivos de Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Entornos virtuales
+venv/
+.env
+.env.*
+
+# Configuraciones de PyCharm
+.idea/
+*.iml
+
+# Archivos de sistema de macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+
+# Archivos de logs y temporales
+*.log
+*.tmp
+*.swp
