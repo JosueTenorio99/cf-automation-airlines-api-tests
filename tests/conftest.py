@@ -1,50 +1,77 @@
-import os
-import random
-import string
-
-import requests, pytest, faker
+from utils.settings import BASE_URL, AUTH_LOGIN
 from dotenv import load_dotenv
-fake = faker.Faker
-
+import os
+import pytest
+import requests
+import faker
+from utils.api_helpers import api_request
+from jsonschema import validate
 load_dotenv()
-BASE_URL = "https://cf-automation-airline-api.onrender.com"
-AUTH_LOGIN = "/auth/login"
-AIRPORT = "/airports"
-USERS = "/users"
+
+
 fake = faker.Faker()
 
 @pytest.fixture(scope="session")
 def admin_token():
     user = os.getenv("ADMIN_USER")
     pwd = os.getenv("ADMIN_PASSWORD")
-    r = requests.post(BASE_URL + AUTH_LOGIN,
-                      data={"username": user, "password": pwd},
-                      timeout=5)
-    r.raise_for_status()
-    return r.json()["access_token"]
+
+    response = api_request(
+        "post",
+        AUTH_LOGIN,
+        data={"username": user, "password": pwd},
+        max_attempts=5,
+        initial_timeout=2,
+        retry_400=True
+    )
+
+    if response is None:
+        raise Exception("❌ Falló el login después de varios intentos")
+
+    try:
+        return response.json()["access_token"]
+    except (KeyError, ValueError):
+        raise Exception(f"❌ Login fallido. Respuesta inesperada: {response.text}")
+
 
 @pytest.fixture
 def auth_headers(admin_token):
     return {"Authorization": f"Bearer {admin_token}"}
 
-@pytest.fixture
-def airport(auth_headers):
-    airport_data= {
-        "iata_code": "".join(random.choices(string.ascii_uppercase, k=3)),
-        "city": "La paz",
-        "country": fake.country_code()
-    }
+def test_admin_token(auth_headers):
+    print(auth_headers)
+# @pytest.fixture
+# def user(auth_headers, role: str = "passenger"):
+#     user_data = {
+#     "email": fake.email(),
+#     "password": fake.password(),
+#     "full_name": "Pam Bazo",
+#     "role": role
+#     }
+#     r = requests.post(f"{BASE_URL}{USERS}",
+#                       json=user_data,
+#                       headers=auth_headers,
+#                       timeout=5)
+#     user_created = r.json()
+#     yield user_created
+#     requests.delete(f"{BASE_URL}{USERS}/{user_created['id']}")
 
-    r = requests.post(BASE_URL + AIRPORT,
-                      json=airport_data,
-                      headers=auth_headers,
-                      timeout=5)
-    r.raise_for_status()
-    airport_response = r.json()
-    yield airport_response
-    requests.delete(f"{BASE_URL}{AIRPORT}{airport_response["iata_code"]}",
-                    headers=auth_headers,
-                    timeout=5)
+# @pytest.fixture
+# def airport(auth_headers):
+#     r = requests.post(BASE_URL + AIRPORT, json=airport_data, headers=auth_headers)
+#     r.raise_for_status()
+#     airport_response = r.json()
+#     yield airport_response
+#     requests.delete(BASE_URL + AIRPORT + f'{airport_response["iata_code"]}', headers=auth_headers, timeout=5)
+def test_admin_token_success(auth_headers):
+    print(auth_headers)  # Imprime el diccionario completo
+#
+#
+# def test_create_airport_schema(airport):
+#     validate(instance=airport, schema=airport_schema)
+#
+#
+# def test_get_all_airports(airport, auth_headers):
+#     r = requests.get(f"{BASE_URL}{AIRPORT}", headers=auth_headers)
+#     return r
 
-def test_airport(airport):
-    return airport
