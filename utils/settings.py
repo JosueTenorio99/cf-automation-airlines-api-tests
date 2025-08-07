@@ -1,12 +1,12 @@
+import faker
+
 AIRPORT = "/airports/"
 AUTH_LOGIN = "/auth/login/"
 AUTH_SIGN_UP= "/auth/signup"
 BASE_URL = "https://cf-automation-airline-api.onrender.com"
 USERS = "/users/"
+
 MAX_WAIT_SECONDS = 60
-import random
-import string
-import faker
 
 fake = faker.Faker()
 

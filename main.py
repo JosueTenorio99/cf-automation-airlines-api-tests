@@ -1,11 +1,5 @@
 import requests
 
-URL = "https://cf-automation-airline-api.onrender.com"
-AUTH_LOGIN = "/auth/login/"
-AUTH_SIGNUP = "/users/"
-LIST_USERS = "/users?skip=0&limit=10"
-
-
 admin_data = {
     "username": "admin@demo.com",
     "password": "admin123"
