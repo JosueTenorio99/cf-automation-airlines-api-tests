@@ -1,36 +1,32 @@
+# utils/api_helpers.py
+
 import requests
 import time
+import logging
 from utils.settings import BASE_URL
 
-RETRIES = 15        # Número de reintentos
-DELAY = 1           # Segundos entre cada intento
-DEFAULT_TIMEOUT = 20  # Tiempo máximo de espera por request (segundos)
+RETRIES = 15
+DELAY = 1
+DEFAULT_TIMEOUT = 20
+
+logger = logging.getLogger("qa_tests")
 
 def api_request(method, path, **kwargs):
-    """
-    Envía una request HTTP con reintentos automáticos por errores 500 y timeouts.
-    - path: Puede ser ruta relativa (ej: "/auth/login/") o URL absoluta.
-    - kwargs: Se pasan directamente a requests.request (headers, json, data, etc.)
-    """
-    # Soporta path relativo o url absoluta
-    url = path if path.startswith("http") else f"{BASE_URL}{path}"
-    last_exc = None
+    url = f"{BASE_URL}{path}"
 
     for i in range(RETRIES):
         try:
             r = requests.request(method, url, timeout=DEFAULT_TIMEOUT, **kwargs)
-            # Solo reintenta si es 500 (o error de red)
             if r.status_code < 500 or i == RETRIES - 1:
                 return r
-            print(f"[QA WARNING] Received {r.status_code} from {url} on attempt {i+1}. Retrying after {DELAY}s...")
+            logger.warning(f"Received {r.status_code} from {url} on attempt {i+1}. Retrying after {DELAY}s...")
         except requests.exceptions.ReadTimeout as e:
-            print(f"[QA WARNING] ReadTimeout on {url} (attempt {i+1}/{RETRIES}), retrying after {DELAY}s...")
+            logger.warning(f"ReadTimeout on {url} (attempt {i+1}/{RETRIES}), retrying after {DELAY}s...")
             last_exc = e
         except Exception as e:
-            print(f"[QA ERROR] Exception on {url}: {e}")
+            logger.error(f"Exception on {url}: {e}")
             last_exc = e
         time.sleep(DELAY)
-    # Si falla, lanza última excepción (timeout/error de red)
     if last_exc:
         raise last_exc
     raise Exception(f"Request to {url} failed after {RETRIES} retries")
