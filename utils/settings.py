@@ -34,3 +34,4 @@ user_schema = {
     },
     "additionalProperties": True
 }
+

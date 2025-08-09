@@ -5,6 +5,7 @@ import faker
 import pytest
 import random
 import string
+import time
 
 fake = faker.Faker()
 
